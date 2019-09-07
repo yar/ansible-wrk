@@ -1,0 +1,8 @@
+Run as:
+
+ansible-playbook -i inventories/production preparation.yml
+
+
+Running one-off commands, e.g. reboot a specific server:
+
+ansible -i inventories/production HOSTNAME_OR_IP -b -a "/sbin/shutdown -r now"

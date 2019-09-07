@@ -1,0 +1,2 @@
+[workers]
+HOSTNAME_OR_IP ansible_ssh_user=root

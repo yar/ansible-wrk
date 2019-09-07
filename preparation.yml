@@ -1,0 +1,5 @@
+- hosts: workers
+  gather_facts: False
+  become: true
+  roles:
+    - { role: worker }

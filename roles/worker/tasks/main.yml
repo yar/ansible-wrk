@@ -1,0 +1,77 @@
+- name: Set Europe/Moscow timezone
+  timezone: name=Europe/Moscow
+  become: yes
+
+# Comment this out after the first run
+- name: Upgrade all default packages
+  apt:
+    upgrade: yes
+    update_cache: yes
+
+- name: Update repositories cache and install "software-properties-common" package
+  apt:
+    name: software-properties-common
+    update_cache: yes
+
+- name: Install standard packages
+  apt:
+    name: "{{ packages }}"
+  vars:
+    packages:
+    - git
+    - vim
+    - parallel
+    - multitail
+
+- apt_repository:
+    repo: ppa:deadsnakes/ppa
+    state: present
+
+- name: Install python packages
+  apt:
+    name: "{{ packages }}"
+  vars:
+    packages:
+    - python3.7
+    - python3-pip
+    - virtualenv
+  register: python_install
+
+- name: Install pip
+  command: "python3.7 -m pip install pip"
+  when: python_install.changed
+
+- apt_repository:
+    repo: ppa:jonathonf/ffmpeg-4
+    state: present
+
+- name: Install ffmpeg
+  apt:
+    name: "ffmpeg"
+    update_cache: yes
+
+- sysctl:
+    name: kernel.pid_max
+    value: "4194303"
+    state: present
+
+- name: Clone spb_elections_recorder_2019
+  git:
+    repo: https://github.com/bakatrouble/spb_elections_recorder_2019/
+    dest: /root/spb_elections_recorder_2019/
+    version: master
+    accept_hostkey: yes
+
+- name: Initialise virtualenv for spb_elections_recorder_2019
+  command: virtualenv -p python3.7 venv
+  args:
+    chdir: /root/spb_elections_recorder_2019
+    creates: /root/spb_elections_recorder_2019/venv
+  register: venv_install_for_spb_elections_recorder_2019
+
+- name: Install pip requirements for spb_elections_recorder_2019
+  shell: |
+    cd /root/spb_elections_recorder_2019
+    . venv/bin/activate
+    pip install -r requirements.txt
+  when: venv_install_for_spb_elections_recorder_2019.changed
